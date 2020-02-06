@@ -1,15 +1,10 @@
-const conexao = require('../conexao')
+const sqlite = require("sqlite");
 
-const executaQuery = (res, query) => {
-  conexao.query(query, (erro, resultados, campos) => {
-    if (erro) {
-      res.json(erro) //funcao
-    } else {
-      res.json(resultados)
-    }
+const executaQuery = async (res, query) => {
+  const conexao = await sqlite.open("./database.sqlite");
+  const resBD = await conexao.all(query);
+  res.json(resBD);
+  await sqlite.close(conexao);
+};
 
-   console.log('executou a query!')
-  })
-}
-
-module.exports = executaQuery
+module.exports = executaQuery;

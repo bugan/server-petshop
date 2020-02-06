@@ -1,47 +1,69 @@
+const SQL = require("sql-template-strings");
+const sqlite = require("sqlite");
 class Tabelas {
-  init(conexao) {
-    this.conexao = conexao
-    this.criaClientes()
-    this.criaPets()
-    this.criaServicos()
-    this.criaAtendimentos()
-
-    console.log('tabelas criadas!')
+  async init() {
+    this.conexao = await sqlite.open("./database.sqlite");
+    this.criaClientes();
+    this.criaPets();
+    this.criaServicos();
+    this.criaAtendimentos();
+    await sqlite.close(this.conexao);
   }
 
   criaClientes() {
-    const sql = 'CREATE TABLE IF NOT EXISTS Clientes (id int NOT NULL AUTO_INCREMENT, nome varchar(150) NOT NULL, cpf char(11) NOT NULL, PRIMARY KEY (id));'
-
-    this.criaTabela(sql)
+    const sql = SQL`CREATE TABLE IF NOT EXISTS Clientes (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      nome text  NOT NULL,
+      cpf text NOT NULL
+      );`;
+    this.criaTabela(sql);
   }
 
   criaPets() {
-    const sql = 'CREATE TABLE IF NOT EXISTS Pets (id int NOT NULL AUTO_INCREMENT, nome varchar(150), donoId int, tipo varchar(100), observacoes text, PRIMARY KEY (id), FOREIGN KEY (donoId) references Clientes(id))'
+    const sql = SQL`CREATE TABLE IF NOT EXISTS Pets (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      nome text,
+      donoId INTEGER,
+      tipo text,
+      observacoes text,
+      FOREIGN KEY (donoId) references Clientes(id))`;
 
-    this.criaTabela(sql)
+    this.criaTabela(sql);
   }
 
   criaServicos() {
-    const sql = 'CREATE TABLE IF NOT EXISTS Servicos (id int NOT NULL AUTO_INCREMENT, nome varchar(150), preco decimal(5,2), descricao text, PRIMARY KEY (id))'
+    const sql = SQL`CREATE TABLE IF NOT EXISTS Servicos (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      nome text,
+      preco decimal(5,2),
+      descricao text)`;
 
-    this.criaTabela(sql)
+    this.criaTabela(sql);
   }
 
   criaAtendimentos() {
-    const sql = 'CREATE TABLE IF NOT EXISTS Atendimentos (id int NOT NULL AUTO_INCREMENT, clienteId int, petId int, servicoId int, data datetime, status varchar(100), observacoes text, PRIMARY KEY(id), FOREIGN KEY (clienteId) references Clientes(id), FOREIGN KEY (petId) references Pets(id), FOREIGN KEY (servicoId) references Servicos(id))'
+    const sql = SQL`CREATE TABLE IF NOT EXISTS Atendimentos (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      clienteId INTEGER,
+      petId INTEGER,
+      servicoId INTEGER,
+      data datetime,
+      status text,
+      observacoes text,
+      FOREIGN KEY (clienteId) references Clientes(id),
+      FOREIGN KEY (petId) references Pets(id),
+      FOREIGN KEY (servicoId) references Servicos(id))`;
 
-    this.criaTabela(sql)
+    this.criaTabela(sql);
   }
 
-  criaTabela(sql) {
-    this.conexao.query(sql, erro => {
-      if(erro) {
-        console.log(erro)
-      }
-    })
+  async criaTabela(sql) {
+    try {
+      const retorno = await this.conexao.run(sql);
+    } catch (e) {
+      console.log(e);
+    }
   }
 }
 
-
-
-module.exports = new Tabelas
+module.exports = new Tabelas();
